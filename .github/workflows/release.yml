@@ -1,6 +1,10 @@
 # Builds the Windows installer and publishes it as a GitHub Release whenever a
 # version tag (v1.2.3) is pushed. Installed copies of the app check these
 # releases and offer the update in-app.
+#
+# The release is created as a draft first, the installer is uploaded into it,
+# the files are checked, and only then is it published. That way installed
+# apps never see a half-uploaded release.
 name: Release
 
 on:
@@ -13,10 +17,12 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -37,7 +43,25 @@ jobs:
       - name: End-to-end tests (real Electron app)
         run: npx playwright test e2e/flows.spec.ts
 
-      - name: Build installer and publish the release
+      - name: Create a draft release
+        shell: bash
+        run: gh release create "$GITHUB_REF_NAME" --draft --verify-tag --title "${GITHUB_REF_NAME#v}" --generate-notes
+
+      - name: Build the installer and upload it to the draft
         run: npx electron-builder --win --publish always
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check the uploaded files, then publish the release
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          IDS=$(gh api "repos/$GITHUB_REPOSITORY/releases" --jq ".[] | select(.tag_name == \"$GITHUB_REF_NAME\") | .id")
+          if [ "$(echo "$IDS" | wc -w)" != "1" ]; then
+            echo "Expected exactly one release for $GITHUB_REF_NAME, found: $IDS" >&2
+            exit 1
+          fi
+          ASSETS=$(gh api "repos/$GITHUB_REPOSITORY/releases/$IDS" --jq '.assets[].name')
+          echo "$ASSETS"
+          for f in "EvenKeel-Setup-$VERSION.exe" "EvenKeel-Setup-$VERSION.exe.blockmap" latest.yml; do
+            echo "$ASSETS" | grep -qx "$f" || { echo "Missing $f in the release" >&2; exit 1; }
+          done
+          gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$IDS" -F draft=false -f make_latest=true --jq '.html_url'

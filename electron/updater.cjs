@@ -71,6 +71,7 @@ function initUpdater(options) {
   updater.autoDownload = false;
   updater.autoInstallOnAppQuit = true;
   updater.allowDowngrade = false;
+  updater.disableWebInstaller = true; // we ship the full installer, not the web stub
   updater.logger = {
     info: (m) => log(`[updater] ${m}`),
     warn: (m) => log(`[updater] WARN ${m}`),

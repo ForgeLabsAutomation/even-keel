@@ -98,9 +98,14 @@ npm version patch          # 1.0.0 -> 1.0.1 (or: minor / major). Commits and tag
 git push --follow-tags     # GitHub Actions tests, builds and publishes the release
 ```
 
-The **Release** workflow (`.github/workflows/release.yml`) runs on Windows. It checks that the tag matches `package.json`, runs the typecheck, unit tests and end-to-end tests, then builds `EvenKeel-Setup-x.y.z.exe` and publishes it with `latest.yml` (what the updater reads) to a GitHub Release. Installed copies pick it up on their next check. To show "What's new" in the app, edit the release on GitHub and add notes.
+The **Release** workflow (`.github/workflows/release.yml`) runs on Windows:
 
-To publish from your own PC instead: `npm run release` (uses `GH_TOKEN` or your `gh auth login` token).
+1. Checks that the tag matches `package.json`.
+2. Runs the typecheck, unit tests and end-to-end tests.
+3. Builds `EvenKeel-Setup-x.y.z.exe` into a draft release.
+4. Checks that the installer, its `.blockmap` and `latest.yml` (what the updater reads) are all attached, then publishes the release.
+
+Installed copies pick it up on their next check (at startup and every few hours). To show "What's new" in the app, edit the release notes on GitHub. If a step fails, nothing is published. Fix the problem, delete the draft release and the tag, then tag again.
 
 Notes:
 
@@ -117,7 +122,7 @@ src/state/         data model, reducer, persistence & repair, demo data (+ tests
 src/features/      screens: dashboard, transactions, bills & income, budget, settings
 src/ui/            shared components: dialog, fields, menu, toasts, meters
 e2e/               Playwright tests that launch the real app
-scripts/           dev launcher, icon generator, release helper
+scripts/           dev launcher, icon generator
 ```
 
 ### How the data model avoids double counting

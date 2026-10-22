@@ -20,8 +20,7 @@
     "check": "npm run typecheck && npm run test && npm run build",
     "icon": "node scripts/make-icon.mjs",
     "start": "npm run build && electron .",
-    "dist": "npm run check && electron-builder --win --publish never",
-    "release": "npm run check && node scripts/release.mjs"
+    "dist": "npm run check && electron-builder --win --publish never"
   },
   "build": {
     "appId": "com.evenkeel.budget",
