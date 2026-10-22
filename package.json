@@ -1,0 +1,87 @@
+{
+  "name": "even-keel",
+  "productName": "Even Keel",
+  "version": "1.0.0",
+  "description": "A calm, simple budget for weekly pay, bills, and everyday spending.",
+  "author": "Even Keel",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "npm run build && playwright test e2e/flows.spec.ts",
+    "qa:screens": "npm run build && playwright test e2e/visual.spec.ts",
+    "check": "npm run typecheck && npm run test && npm run build",
+    "icon": "node scripts/make-icon.mjs",
+    "start": "npm run build && electron .",
+    "dist": "npm run check && electron-builder --win --publish never",
+    "release": "npm run check && node scripts/release.mjs"
+  },
+  "build": {
+    "appId": "com.evenkeel.budget",
+    "productName": "Even Keel",
+    "artifactName": "EvenKeel-Setup-${version}.${ext}",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Even Keel",
+      "deleteAppDataOnUninstall": false
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "ForgeLabsAutomation",
+        "repo": "even-keel",
+        "releaseType": "release"
+      }
+    ]
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@resvg/resvg-js": "^2.6.2",
+    "@types/node": "^26.6.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "electron": "^45.0.0",
+    "electron-builder": "^26.15.3",
+    "lucide-react": "^1.61.0",
+    "png-to-ico": "^3.0.2",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  }
+}
