@@ -5,7 +5,7 @@ declare global {
     | { status: 'idle' }
     | { status: 'unsupported'; reason: string }
     | { status: 'checking' }
-    | { status: 'available'; version: string; releaseNotes?: string }
+    | { status: 'available'; version: string; releaseNotes?: string; /** Mac: the download page opens instead of an in-app install. */ manual?: boolean }
     | { status: 'not-available'; version: string }
     | { status: 'downloading'; version: string; percent: number }
     | { status: 'downloaded'; version: string }

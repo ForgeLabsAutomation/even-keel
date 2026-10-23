@@ -7,7 +7,11 @@ on:
 
 jobs:
   check:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -20,3 +24,17 @@ jobs:
       - run: npm run build
       - name: End-to-end tests (real Electron app)
         run: npx playwright test e2e/flows.spec.ts
+
+      # On macOS, also package the app so every change gets a Mac test build.
+      - name: Package Mac app
+        if: runner.os == 'macOS'
+        run: npx electron-builder --mac --publish never
+      - name: Check the Mac app's signature is intact
+        if: runner.os == 'macOS'
+        run: codesign --verify --deep --strict --verbose=2 "release/mac-universal/Even Keel.app"
+      - uses: actions/upload-artifact@v7
+        if: runner.os == 'macOS'
+        with:
+          name: mac-test-build
+          path: release/*.dmg
+          retention-days: 14

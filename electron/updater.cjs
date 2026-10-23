@@ -7,9 +7,24 @@
  * when they press Update. After the download they choose when to restart.
  * If they just quit instead, the update installs on the way out.
  */
-const { app } = require('electron');
+const { app, shell } = require('electron');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
+// shortcut: Mac builds are ad-hoc signed and macOS only installs updates into Developer ID-signed
+// apps, so on Mac "Update" opens the download page. Drop this once the Mac build is Developer ID signed.
+const MANUAL_UPDATES = process.platform === 'darwin';
+
+/** The GitHub releases page named in the app-update.yml that electron-builder bundles. */
+function releasesPage() {
+  const yml = fs.readFileSync(path.join(process.resourcesPath, 'app-update.yml'), 'utf8');
+  const field = (key) => ((yml.match(new RegExp(`^${key}:\\s*(\\S+)`, 'm')) || [])[1] || '').trim();
+  const owner = field('owner');
+  const repo = field('repo');
+  if (!owner || !repo) throw new Error('No update repository configured');
+  return `https://github.com/${owner}/${repo}/releases/latest`;
+}
 
 /** @type {UpdateState} */
 let state = { status: 'idle' };
@@ -82,7 +97,12 @@ function initUpdater(options) {
 
   updater.on('checking-for-update', () => setState({ status: 'checking' }));
   updater.on('update-available', (info) =>
-    setState({ status: 'available', version: info.version, releaseNotes: stripHtml(info.releaseNotes) }),
+    setState({
+      status: 'available',
+      version: info.version,
+      releaseNotes: stripHtml(info.releaseNotes),
+      ...(MANUAL_UPDATES ? { manual: true } : {}),
+    }),
   );
   updater.on('update-not-available', () => setState({ status: 'not-available', version: app.getVersion() }));
   updater.on('download-progress', (p) => {
@@ -125,6 +145,14 @@ async function checkNow() {
 async function download() {
   if (!updater) return state;
   if (state.status !== 'available') return state;
+  if (MANUAL_UPDATES) {
+    try {
+      await shell.openExternal(releasesPage());
+    } catch (err) {
+      setState({ status: 'error', message: friendlyError(err) });
+    }
+    return state;
+  }
   const version = state.version || '';
   try {
     setState({ status: 'downloading', version, percent: 0 });

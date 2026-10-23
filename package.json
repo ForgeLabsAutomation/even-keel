@@ -46,6 +46,27 @@
       ],
       "icon": "build/icon.ico"
     },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "artifactName": "EvenKeel-${version}-mac.${ext}",
+      "icon": "build/icon.png",
+      "category": "public.app-category.finance",
+      "identity": "-",
+      "hardenedRuntime": false
+    },
     "nsis": {
       "oneClick": true,
       "perMachine": false,

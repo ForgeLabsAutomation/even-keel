@@ -25,7 +25,7 @@ function render(size) {
   return new Resvg(svg, { fitTo: { mode: 'width', value: size } }).render().asPng();
 }
 
-fs.writeFileSync(path.join(outDir, 'icon.png'), render(512));
+fs.writeFileSync(path.join(outDir, 'icon.png'), render(1024)); // macOS wants 1024px
 const icoSizes = [16, 24, 32, 48, 64, 128, 256].map(render);
 fs.writeFileSync(path.join(outDir, 'icon.ico'), await pngToIco(icoSizes));
 console.log('Wrote build/icon.png and build/icon.ico');

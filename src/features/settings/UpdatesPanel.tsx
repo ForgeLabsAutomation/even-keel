@@ -40,8 +40,11 @@ export function UpdatesPanel({ version }: { version?: string }) {
               <p>{state.releaseNotes}</p>
             </details>
           )}
+          {state.manual && (
+            <p className="muted">Opens the download page. Open the new download and drag Even Keel into Applications, replacing the old one. Your data stays.</p>
+          )}
           <button type="button" className="btn btn--primary" onClick={download}>
-            <Download size={16} aria-hidden="true" /> Update now
+            <Download size={16} aria-hidden="true" /> {state.manual ? 'Download update' : 'Update now'}
           </button>
         </div>
       )}

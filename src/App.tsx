@@ -232,7 +232,7 @@ function Banners({ loadNotes }: { loadNotes: string[] }) {
             <strong>A new version ({update.version}) is available.</strong> Your data stays safe when you update.
           </p>
           <button type="button" className="btn btn--sm btn--primary" onClick={download}>
-            Update now
+            {update.manual ? 'Download update' : 'Update now'}
           </button>
         </Banner>
       )}

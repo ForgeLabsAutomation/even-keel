@@ -25,7 +25,8 @@ if (!app.requestSingleInstanceLock()) {
   process.exit(0);
 }
 
-app.setAppUserModelId(APP_ID);
+// Windows-only API (it doesn't exist on macOS); needed for notifications there.
+if (process.platform === 'win32') app.setAppUserModelId(APP_ID);
 
 // ---------------------------------------------------------------------------
 // Logging (kept small; helps diagnose update problems on someone else's PC)
@@ -139,7 +140,8 @@ function createWindow() {
 
 function buildMenu() {
   const template = [
-    { label: 'File', submenu: [{ role: 'quit', label: 'Exit' }] },
+    // macOS expects the app-name menu (About, Hide, Quit) first.
+    process.platform === 'darwin' ? { role: 'appMenu' } : { label: 'File', submenu: [{ role: 'quit', label: 'Exit' }] },
     {
       label: 'Edit',
       submenu: [

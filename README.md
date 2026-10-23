@@ -7,7 +7,7 @@ A calm, simple budgeting app for one person who gets paid weekly (or every two w
 - **How much can I spend until my next payday?** "Left to spend" after the bills due before payday.
 - **Where has my money gone?** Spending by category against your plan, top places, and a 6-month trend.
 
-It's a Windows desktop app. All data stays on the computer. There's no bank connection, no account, and nothing is sent anywhere. The only network request it makes is to check GitHub for app updates.
+It's a desktop app for Windows and Mac. All data stays on the computer. There's no bank connection, no account, and nothing is sent anywhere. The only network request it makes is to check GitHub for app updates.
 
 ![Overview screen with demo data](docs/screenshot.png)
 
@@ -15,17 +15,24 @@ It's a Windows desktop app. All data stays on the computer. There's no bank conn
 
 ## For the person using it
 
-### Install
+### Install on Windows
 
 1. Open the project's **Releases** page on GitHub and download the latest `EvenKeel-Setup-x.y.z.exe`.
 2. Run it. Windows may show "Windows protected your PC" because the installer isn't code-signed. Click **More info → Run anyway**.
 3. Even Keel installs for your user account (no admin password) and opens. A desktop shortcut is added.
 
+### Install on Mac
+
+1. From the same **Releases** page, download `EvenKeel-x.y.z-mac.dmg`. It works on both Apple Silicon and Intel Macs.
+2. Open it and drag **Even Keel** into **Applications**.
+3. Open Even Keel. The first time, macOS says it can't verify the app, because it isn't signed with a paid Apple certificate. Click **Done**, then go to **System Settings → Privacy & Security**, scroll down, and click **Open Anyway**. You only do this once.
+
 ### Updating
 
 When a new version is published, the app notices on startup (and every few hours while open) and shows a banner:
 
-> **A new version is available.** → **Update now** → **Restart and update**
+- **Windows:** **Update now** → **Restart and update**. That's it.
+- **Mac:** **Download update** opens the download page. Open the new `.dmg` and drag Even Keel into Applications, choosing **Replace**.
 
 You can also check any time in **Settings → App updates → Check for updates**. Updating never touches your data.
 
@@ -42,7 +49,7 @@ Handy to know:
 
 ### Your data
 
-- Saved automatically to `%APPDATA%\Even Keel\even-keel-data.json`. **Settings → Your data** shows the exact path.
+- Saved automatically to `%APPDATA%\Even Keel\even-keel-data.json` (Mac: `~/Library/Application Support/Even Keel/`). **Settings → Your data** shows the exact path.
 - A backup copy is kept for each of the last 14 days in the `backups` folder next to it.
 - **Settings** can export transactions to CSV (opens in Excel), back up everything to a file, and restore from a backup.
 - Updating or uninstalling the app does not delete your data.
@@ -98,12 +105,13 @@ npm version patch          # 1.0.0 -> 1.0.1 (or: minor / major). Commits and tag
 git push --follow-tags     # GitHub Actions tests, builds and publishes the release
 ```
 
-The **Release** workflow (`.github/workflows/release.yml`) runs on Windows:
+The **Release** workflow (`.github/workflows/release.yml`):
 
-1. Checks that the tag matches `package.json`.
-2. Runs the typecheck, unit tests and end-to-end tests.
-3. Builds `EvenKeel-Setup-x.y.z.exe` into a draft release.
-4. Checks that the installer, its `.blockmap` and `latest.yml` (what the updater reads) are all attached, then publishes the release.
+1. Checks that the tag matches `package.json` and creates a draft release.
+2. On a Windows machine and a Mac, runs the typecheck, unit tests and end-to-end tests, then builds the app into the draft.
+3. Checks that the Windows installer, the Mac `.dmg` and `.zip`, and `latest.yml` / `latest-mac.yml` (what the updater reads) are all attached, then publishes the release.
+
+Every push to `main` also builds a Mac test copy. Download it from the CI run's **Artifacts** section (`mac-test-build`) to try a change on a Mac before releasing.
 
 Installed copies pick it up on their next check (at startup and every few hours). To show "What's new" in the app, edit the release notes on GitHub. If a step fails, nothing is published. Fix the problem, delete the draft release and the tag, then tag again.
 
@@ -111,7 +119,8 @@ Notes:
 
 - Don't change `build.appId` (`com.evenkeel.budget`) after people have installed the app. Windows uses it to recognise updates. `productName` controls the display name and the data folder name, so changing it would also start a fresh data folder.
 - The installer is unsigned, so SmartScreen warns on the first install. Updates install silently without the warning. A code-signing certificate (set `CSC_LINK` / `CSC_KEY_PASSWORD` in the workflow) removes it.
-- Only Windows is built. macOS auto-update requires a paid Apple signing identity.
+- The Mac app is ad-hoc signed (free), so macOS asks for approval on first open and can't install updates by itself. With an Apple Developer account ($99/year), add the certificate and notarization secrets (`CSC_LINK`, `CSC_KEY_PASSWORD`, `APPLE_ID`, `APPLE_APP_SPECIFIC_PASSWORD`, `APPLE_TEAM_ID`) to the release workflow. Then remove `"identity": "-"` and set `"hardenedRuntime": true` under `build.mac`, and delete the `MANUAL_UPDATES` shortcut in `electron/updater.cjs`. Macs then update in-app like Windows.
+- Mac data lives in `~/Library/Application Support/Even Keel/`.
 
 ### Project layout
 
